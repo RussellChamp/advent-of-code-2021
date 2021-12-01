@@ -9,8 +9,8 @@ import (
 	"strconv"
 )
 
-const DEBUG = true
-const WIDTH = 100
+var DEBUG = true
+var WIDTH = 100
 
 func check(e error) {
 	if e != nil {
@@ -37,8 +37,8 @@ func part1() {
 	fmt.Println(" Answer: How many measurements are larger than the previous measurement?")
 
 	input, err := os.Open("./input.txt")
-	check(err)
 	defer input.Close()
+	check(err)
 
 	scanner := bufio.NewScanner(input)
 
@@ -53,7 +53,7 @@ func part1() {
 		if lastValue != -1 && lastValue < value {
 			increases++
 		}
-		printPip(lastValue, lastValue, value, measurements)
+		fmt.Print(GetPip(lastValue, lastValue, value, measurements))
 
 		lastValue = value
 	}
@@ -67,8 +67,8 @@ func part2() {
 	fmt.Println(" Answer: How many sums are larger than the previous sum?")
 
 	input, err := os.Open("./input.txt")
-	check(err)
 	defer input.Close()
+	check(err)
 
 	scanner := bufio.NewScanner(input)
 
@@ -88,7 +88,7 @@ func part2() {
 			increases++
 		}
 
-		printPip(w1, previous, current, measurements)
+		fmt.Print(GetPip(w1, previous, current, measurements))
 
 		// shift over the window
 		w1, w2, w3 = w2, w3, value
@@ -97,19 +97,22 @@ func part2() {
 	fmt.Printf("Read %d measurements resulting in %d increases\n", measurements, increases)
 }
 
-func printPip(first int, previous int, current int, total int) {
+func GetPip(first int, previous int, current int, total int) string {
+	retVal := ""
 	if !DEBUG {
-		return
+		return retVal
 	}
 
-	if first != -1 && current > previous {
-		fmt.Print("+")
-	} else if first != -1 && current < previous {
-		fmt.Print("-")
-	} else {
-		fmt.Print(".")
+	switch {
+	case first != -1 && current > previous:
+		retVal = "+"
+	case first != -1 && current < previous:
+		retVal = "-"
+	default:
+		retVal = "."
 	}
 	if total%WIDTH == 0 {
-		fmt.Println() // linebreak
+		retVal += "\n"
 	}
+	return retVal
 }

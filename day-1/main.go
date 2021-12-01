@@ -2,6 +2,7 @@
 package main
 
 import (
+	"AoC2021/utils/timer"
 	"bufio"
 	"fmt"
 	"os"
@@ -20,10 +21,13 @@ func check(e error) {
 
 func main() {
 	fmt.Println("--- Day 1: Sonar Sweep ---")
+	timer.Start()
 	part1()
+	timer.Tick()
 	fmt.Println()
 
 	part2()
+	timer.Tick()
 	fmt.Println()
 }
 
@@ -54,7 +58,7 @@ func part1() {
 		lastValue = value
 	}
 
-	fmt.Printf("\nRead %d measurements resulting in %d increases\n", measurements, increases)
+	fmt.Printf("Read %d measurements resulting in %d increases\n", measurements, increases)
 }
 
 func part2() {
@@ -90,7 +94,7 @@ func part2() {
 		w1, w2, w3 = w2, w3, value
 	}
 
-	fmt.Printf("\nRead %d measurements resulting in %d increases\n", measurements, increases)
+	fmt.Printf("Read %d measurements resulting in %d increases\n", measurements, increases)
 }
 
 func printPip(first int, previous int, current int, total int) {

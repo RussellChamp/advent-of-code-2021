@@ -1,7 +1,8 @@
-/* Day #: */
+/* Day #DAY#: #TITLE# */
 package main
 
 import (
+	"AoC2021/utils/timer"
 	"bufio"
 	"fmt"
 	"os"
@@ -14,24 +15,42 @@ func check(e error) {
 	}
 }
 
-func ReadAllLines(input *os.File) []string {
-	scanner := bufio.NewScanner(input)
-	var text []string
-	for scanner.Scan() {
-		text = append(text, scanner.Text())
-	}
-	return text
+func main() {
+	fmt.Println("--- Day #DAY#: #TITLE# ---")
+	timer.Start()
+	part1()
+	timer.Tick()
+	fmt.Println()
+
+	part2()
+	timer.Tick()
+	fmt.Println()
 }
 
-func main() {
+func part1() {
+	fmt.Println("* Part 1 *")
+	fmt.Println(" Goal: ")
+	fmt.Println(" Answer: ")
 
-	input1, err := os.Open("./input.txt")
+	input, err := os.Open("./input.txt")
 	check(err)
+	defer input.Close()
 
-	text := ReadAllLines(input1)
-	input1.Close()
+	scanner := bufio.NewScanner(input)
+	lines := 0
+	answer := 42
 
-	fmt.Printf("Read %d lines from %s\n", len(text), "input.txt")
+	for scanner.Scan() {
+		_ = scanner.Text()
+		lines++
+	}
 
-	fmt.Println()
+	fmt.Printf("Read %d lines from input\n", lines)
+	fmt.Printf("The solution is %d\n", answer)
+}
+
+func part2() {
+	fmt.Println("* Part 2 *")
+	fmt.Println(" Goal: ")
+	fmt.Println(" Answer: ")
 }

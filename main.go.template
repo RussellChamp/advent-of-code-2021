@@ -1,0 +1,37 @@
+/* Day #: */
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
+
+func check(e error) {
+	if e != nil {
+		fmt.Println("Oh snap!")
+		panic(e)
+	}
+}
+
+func ReadAllLines(input *os.File) []string {
+	scanner := bufio.NewScanner(input)
+	var text []string
+	for scanner.Scan() {
+		text = append(text, scanner.Text())
+	}
+	return text
+}
+
+func main() {
+
+	input1, err := os.Open("./input.txt")
+	check(err)
+
+	text := ReadAllLines(input1)
+	input1.Close()
+
+	fmt.Printf("Read %d lines from %s\n", len(text), "input.txt")
+
+	fmt.Println()
+}

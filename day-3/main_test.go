@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestDay#DAY#(t *testing.T) {
+func TestDay3(t *testing.T) {
 	assert.IsTrue(t, true, "cool")
 	assert.StrEquals(t, "foo", "bar", "baz")
 }

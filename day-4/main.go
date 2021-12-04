@@ -30,15 +30,20 @@ func main() {
 	fmt.Println()
 }
 
-type Card = [][]string
+type Card = [][]uint8
 
-func readData(input *os.File) ([]string, []Card) {
+func readData(input *os.File) ([]uint8, []Card) {
 	scanner := bufio.NewScanner(input)
 
-	var draws []string
+	var draws []uint8
 
 	if scanner.Scan() {
-		draws = strings.Split(scanner.Text(), ",")
+		for _, val := range strings.Split(scanner.Text(), ",") {
+			iVal, err := strconv.Atoi(val)
+			check(err)
+
+			draws = append(draws, uint8(iVal))
+		}
 	}
 
 	var cards []Card
@@ -56,8 +61,14 @@ func readData(input *os.File) ([]string, []Card) {
 			//fmt.Printf("Added card %d to cards {%s}\n", cardIdx, cards)
 		default:
 			rowVals := strings.Fields(line)
+			var newRow []uint8
+			for _, strVal := range rowVals {
+				val, err := strconv.Atoi(strVal)
+				check(err)
+				newRow = append(newRow, uint8(val))
+			}
 			//fmt.Printf("Attempting to push [%s] to card %d row %d {%s}\n", line, cardIdx, rowIdx, cards[cardIdx])
-			cards[cardIdx] = append(cards[cardIdx], rowVals)
+			cards[cardIdx] = append(cards[cardIdx], newRow)
 			rowIdx += 1
 		}
 	}
@@ -87,7 +98,7 @@ func initializeMarks(cards []Card) []MarkedCard {
 	return marks
 }
 
-func markCards(cards []Card, marks []MarkedCard, draw string) []MarkedCard {
+func markCards(cards []Card, marks []MarkedCard, draw uint8) []MarkedCard {
 	for cIdx, card := range cards {
 		for rowIdx, row := range card {
 			for colIdx, value := range row {
@@ -150,12 +161,10 @@ func getCardScore(card Card, mark MarkedCard) int {
 
 	// sum up all the non-marked bingo spots
 	for rIdx, row := range card {
-		for cIdx, strVal := range row {
+		for cIdx, value := range row {
 			if !mark[rIdx][cIdx] {
-				value, err := strconv.Atoi(strVal)
-				check(err)
 
-				score += value
+				score += int(value)
 			}
 		}
 	}
@@ -181,7 +190,7 @@ func part1() {
 
 	drawTimes := 0
 	winningCardIdx := -1
-	lastDraw := 0
+	lastDraw := uint8(0)
 	score := 0
 	for _, draw := range draws {
 		drawTimes += 1
@@ -193,11 +202,9 @@ func part1() {
 			score = getCardScore(winningCard, winningMarks)
 
 			// multiply by the last drawn tile
-			mult, err := strconv.Atoi(draw)
-			check(err)
 
-			lastDraw = mult
-			score *= mult
+			lastDraw = draw
+			score *= int(draw)
 
 			break
 		}
@@ -219,7 +226,7 @@ func part2() {
 	marks := initializeMarks(cards)
 
 	drawTimes := 0
-	lastDraw := 0
+	lastDraw := uint8(0)
 	score := 0
 	foundLoser := false
 
@@ -239,11 +246,9 @@ func part2() {
 				score = getCardScore(cards[0], marks[0])
 
 				// multiply by the last drawn tile
-				mult, err := strconv.Atoi(draw)
-				check(err)
 
-				lastDraw = mult
-				score *= mult
+				lastDraw = draw
+				score *= int(draw)
 				foundLoser = true
 				break
 			}

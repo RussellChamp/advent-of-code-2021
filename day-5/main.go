@@ -2,6 +2,7 @@
 package main
 
 import (
+	"AoC2021/utils/log"
 	"AoC2021/utils/timer"
 	"bufio"
 	"fmt"
@@ -14,7 +15,7 @@ const MAX_SIZE = 1000
 
 func check(e error) {
 	if e != nil {
-		fmt.Println("Oh snap!")
+		log.Println(log.DEBUG, "Oh snap!")
 		panic(e)
 	}
 }
@@ -23,11 +24,11 @@ func checkCoord(x int, y int) {
 	badVal := false
 	if x < 0 || x >= MAX_SIZE {
 		badVal = true
-		fmt.Println("Invalid x value:", x)
+		log.Println(log.DEBUG, "Invalid x value:", x)
 	}
 	if y < 0 || y >= MAX_SIZE {
 		badVal = true
-		fmt.Println("Invalid y value:", y)
+		log.Println(log.DEBUG, "Invalid y value:", y)
 	}
 
 	if badVal {
@@ -36,15 +37,15 @@ func checkCoord(x int, y int) {
 }
 
 func main() {
-	fmt.Println("--- Day 5: Hydrothermal Venture ---")
+	log.Println(log.NORMAL, "--- Day 5: Hydrothermal Venture ---")
 	timer.Start()
-	// part1()
-	// timer.Tick()
-	// fmt.Println()
+	part1()
+	timer.Tick()
+	log.Println(log.NORMAL)
 
 	part2()
 	timer.Tick()
-	fmt.Println()
+	log.Println(log.NORMAL)
 }
 
 func parseLine(line string) (int, int, int, int) {
@@ -94,9 +95,9 @@ func Sign(a int) int {
 }
 
 func part1() {
-	fmt.Println("* Part 1 *")
-	fmt.Println(" Goal: Determine the number of points where at least two lines overlap")
-	fmt.Println(" Answer: At how many points do at least two lines overlap?")
+	log.Println(log.NORMAL, "* Part 1 *")
+	log.Println(log.NORMAL, " Goal: Determine the number of points where at least two lines overlap")
+	log.Println(log.NORMAL, " Answer: At how many points do at least two lines overlap?")
 
 	input, err := os.Open("./input.txt")
 	check(err)
@@ -107,7 +108,7 @@ func part1() {
 	goodLines := 0
 
 	var grid [MAX_SIZE][MAX_SIZE]uint
-	// fmt.Printf("Initialized grid of size %d\n", MAX_SIZE)
+	// log.Printf("Initialized grid of size %d\n", MAX_SIZE)
 
 	// Draw the lines
 	for scanner.Scan() {
@@ -140,14 +141,14 @@ func part1() {
 		}
 	}
 
-	fmt.Printf("Read %d lines from input. Found %d straight segments\n", lines, goodLines)
-	fmt.Printf("Found %d line intersections\n", intersections)
+	log.Printf(log.NORMAL, "Read %d lines from input. Found %d straight segments\n", lines, goodLines)
+	log.Printf(log.NORMAL, "Found %d line intersections\n", intersections)
 }
 
 func part2() {
-	fmt.Println("* Part 2 *")
-	fmt.Println(" Goal: Including diagonal line segments, determine the number of points where at least two lines overlap")
-	fmt.Println(" Answer: At how many points do at least two lines overlap?")
+	log.Println(log.NORMAL, "* Part 2 *")
+	log.Println(log.NORMAL, " Goal: Including diagonal line segments, determine the number of points where at least two lines overlap")
+	log.Println(log.NORMAL, " Answer: At how many points do at least two lines overlap?")
 
 	input, err := os.Open("./input.txt")
 	check(err)
@@ -171,7 +172,7 @@ func part2() {
 		xVel := Sign(x2 - x1)
 		yVel := Sign(y2 - y1)
 
-		//fmt.Printf("Drawing line from (%d,%d) to (%d,%d) using velocity [%d,%d]", x1, y1, x2, y2, xVel, yVel)
+		//log.Printf("Drawing line from (%d,%d) to (%d,%d) using velocity [%d,%d]", x1, y1, x2, y2, xVel, yVel)
 
 		dots := 0
 		for x, y := x1, y1; x != x2 || y != y2; {
@@ -185,7 +186,7 @@ func part2() {
 		}
 		// Mark the last point
 		grid[x2][y2] += 1
-		//fmt.Printf(" -- Drew %d dots\n", dots+1)
+		//log.Printf(" -- Drew %d dots\n", dots+1)
 	}
 	// Count the intersections
 	intersections := 0
@@ -197,6 +198,6 @@ func part2() {
 		}
 	}
 
-	fmt.Printf("Read %d lines from input.\n", lines)
-	fmt.Printf("Found %d line intersections\n", intersections)
+	log.Printf(log.NORMAL, "Read %d lines from input.\n", lines)
+	log.Printf(log.NORMAL, "Found %d line intersections\n", intersections)
 }

@@ -2,6 +2,7 @@
 package main
 
 import (
+	"AoC2021/utils/log"
 	"AoC2021/utils/timer"
 	"bufio"
 	"fmt"
@@ -10,31 +11,31 @@ import (
 
 func check(e error) {
 	if e != nil {
-		fmt.Println("Oh snap!")
+		log.Println(log.DEBUG, "Oh snap!")
 		panic(e)
 	}
 }
 
 func main() {
-	fmt.Println("--- Day #DAY#: #TITLE# ---")
+	log.Println(log.NORMAL, "--- Day #DAY#: #TITLE# ---")
 	timer.Start()
 	part1()
 	timer.Tick()
-	fmt.Println()
+	log.Println(log.NORMAL)
 
 	part2()
 	timer.Tick()
-	fmt.Println()
+	log.Println(log.NORMAL)
 }
 
 func part1() {
-	fmt.Println("* Part 1 *")
-	fmt.Println(" Goal: ")
-	fmt.Println(" Answer: ")
+	log.Println(log.NORMAL, "* Part 1 *")
+	log.Println(log.NORMAL, " Goal: ")
+	log.Println(log.NORMAL, " Answer: ")
 
 	input, err := os.Open("./input.txt")
-	defer input.Close()
 	check(err)
+	defer input.Close()
 
 	scanner := bufio.NewScanner(input)
 	lines := 0
@@ -45,12 +46,12 @@ func part1() {
 		lines++
 	}
 
-	fmt.Printf("Read %d lines from input\n", lines)
-	fmt.Printf("The solution is %d\n", answer)
+	log.Printf(log.NORMAL, "Read %d lines from input\n", lines)
+	log.Printf(log.NORMAL, "The solution is %d\n", answer)
 }
 
 func part2() {
-	fmt.Println("* Part 2 *")
-	fmt.Println(" Goal: ")
-	fmt.Println(" Answer: ")
+	log.Println(log.NORMAL, "* Part 2 *")
+	log.Println(log.NORMAL, " Goal: ")
+	log.Println(log.NORMAL, " Answer: ")
 }

@@ -3,9 +3,10 @@ package log
 import "fmt"
 
 const (
-	NONE   = 0
-	NORMAL = 1
-	DEBUG  = 2
+	NONE       = 0
+	NORMAL     = 1
+	DEBUG      = 2
+	DIAGNOSTIC = 3
 )
 
 var LOG_LEVEL = NORMAL

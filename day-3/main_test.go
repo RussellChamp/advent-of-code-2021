@@ -1,11 +1,11 @@
 package main
 
 import (
-	assert "AoC2021/utils/testing"
+	"AoC2021/utils/assert"
 	"testing"
 )
 
 func TestDay3(t *testing.T) {
 	assert.IsTrue(t, true, "cool")
-	assert.StrEquals(t, "foo", "bar", "baz")
+	assert.EqualsStr(t, "foo", "bar", "baz")
 }

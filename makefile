@@ -12,3 +12,6 @@ build:
 
 test:
 	cd day-$(day); go test
+
+test-utils:
+	go test ./utils/*

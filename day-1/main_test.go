@@ -1,14 +1,14 @@
 package main
 
 import (
-	assert "AoC2021/utils/testing"
+	"AoC2021/utils/assert"
 	"testing"
 )
 
 func TestPrintPip(t *testing.T) {
 	DEBUG = false
 	str := GetPip(1, 1, 1, 100)
-	assert.StrEquals(t, str, "", "Should return an empty string")
+	assert.EqualsStr(t, str, "", "Should return an empty string")
 
 	DEBUG = true
 	cases := []struct {
@@ -24,7 +24,7 @@ func TestPrintPip(t *testing.T) {
 
 	for _, c := range cases {
 		str := GetPip(c.first, c.previous, c.current, c.total)
-		assert.StrEquals(t, str, c.expected, c.msg)
+		assert.EqualsStr(t, str, c.expected, c.msg)
 	}
 
 }

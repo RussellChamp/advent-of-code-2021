@@ -37,8 +37,8 @@ func part1() {
 	fmt.Println(" Answer: How many measurements are larger than the previous measurement?")
 
 	input, err := os.Open("./input.txt")
-	defer input.Close()
 	check(err)
+	defer input.Close()
 
 	scanner := bufio.NewScanner(input)
 
@@ -67,8 +67,8 @@ func part2() {
 	fmt.Println(" Answer: How many sums are larger than the previous sum?")
 
 	input, err := os.Open("./input.txt")
-	defer input.Close()
 	check(err)
+	defer input.Close()
 
 	scanner := bufio.NewScanner(input)
 

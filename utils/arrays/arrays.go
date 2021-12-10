@@ -47,3 +47,11 @@ func MapStrToInt(input []string, fn func(string) int) []int {
 	}
 	return retVals
 }
+
+func Reverse(input []string) []string {
+	var output []string
+	for idx := len(input) - 1; idx >= 0; idx-- {
+		output = append(output, input[idx])
+	}
+	return output
+}

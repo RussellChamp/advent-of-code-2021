@@ -9,7 +9,20 @@ const (
 	DIAGNOSTIC = 3
 )
 
+const (
+	CONSOLE = 1
+	FILE    = 2
+)
+
 var LOG_LEVEL = NORMAL
+var LOG_TIMESTAMP = false
+var LOG_OUTPUT = CONSOLE
+
+func SetLogLevel(level int) {
+	if level >= NONE && level <= DIAGNOSTIC {
+		LOG_LEVEL = level
+	}
+}
 
 func Print(minLevel int, a ...interface{}) (int, error) {
 	if LOG_LEVEL >= minLevel {

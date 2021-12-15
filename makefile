@@ -8,7 +8,7 @@ init:
 	touch day-$(day)/input.txt;
 
 build:
-	cd day-$(day); go run .
+	cd day-$(day); go run . log=$(log) part=$(part)
 
 test:
 	cd day-$(day); go test

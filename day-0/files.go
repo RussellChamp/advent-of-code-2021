@@ -6,6 +6,14 @@ import (
 	"os"
 )
 
+// func short_read() {
+// 	dat, err := os.Open("./short_file.txt")
+// 	tryMe(err)
+// 	defer dat.Close()
+
+// 	bytes := ??
+// }
+
 func tryMe(e error) {
 	if e != nil {
 		fmt.Println("OH SNAP!")

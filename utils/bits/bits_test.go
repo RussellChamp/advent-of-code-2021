@@ -26,3 +26,37 @@ func TestByBitCount(t *testing.T) {
 	twoBitFilter := ByBitCount(2)
 	assert.IsTrue(t, twoBitFilter(17 /*10001*/), "should count bits")
 }
+
+func TestHexByteToBits(t *testing.T) {
+	cases := []struct {
+		input  rune
+		output string
+	}{
+		{'0', "0000"},
+		{'1', "0001"},
+		{'2', "0010"},
+		{'3', "0011"},
+		{'4', "0100"},
+		{'5', "0101"},
+		{'6', "0110"},
+		{'7', "0111"},
+		{'8', "1000"},
+		{'9', "1001"},
+		{'A', "1010"},
+		{'B', "1011"},
+		{'C', "1100"},
+		{'D', "1101"},
+		{'E', "1110"},
+		{'F', "1111"},
+	}
+
+	for _, c := range cases {
+		bits, err := HexByteToBits(byte(c.input))
+		if err != nil {
+			t.Logf("Got error from HexByteToBits: %s", err.Error())
+			t.Fail()
+		}
+		bitStr := ToStr(bits)
+		assert.EqualsStr(t, bitStr, c.output, "incorrect value")
+	}
+}

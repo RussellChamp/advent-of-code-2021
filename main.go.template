@@ -2,6 +2,7 @@
 package main
 
 import (
+	"AoC2021/utils/args"
 	"AoC2021/utils/log"
 	"AoC2021/utils/timer"
 	"bufio"
@@ -17,15 +18,24 @@ func check(e error) {
 }
 
 func main() {
+	argMap := args.Parse(os.Args)
+	log.SetLogLevelFromArgs(argMap)
+	selectedPart, partSpecified := argMap["part"]
+
 	log.Println(log.NORMAL, "--- Day #DAY#: #TITLE# ---")
 	timer.Start()
-	part1()
-	timer.Tick()
-	log.Println(log.NORMAL)
 
-	part2()
-	timer.Tick()
-	log.Println(log.NORMAL)
+	if !partSpecified || selectedPart == "" || selectedPart == "1" {
+		part1()
+		timer.Tick()
+		log.Println(log.NORMAL)
+	}
+
+	if !partSpecified || selectedPart == "" || selectedPart == "2" {
+		part2()
+		timer.Tick()
+		log.Println(log.NORMAL)
+	}
 }
 
 func part1() {

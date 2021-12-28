@@ -30,7 +30,7 @@ func SetLogLevel(level int) {
 
 func SetLogLevelFromArgs(argMap map[string]string) {
 	logLevelStr, found := argMap["log"]
-	if found {
+	if found && logLevelStr != "" {
 		logLevel, err := NORMAL, error(nil)
 
 		switch logLevelStr {

@@ -7,12 +7,12 @@ import (
 	"AoC2021/utils/color"
 	"AoC2021/utils/files"
 	"AoC2021/utils/log"
+	"AoC2021/utils/numbers"
 	"AoC2021/utils/timer"
 	"bufio"
 	"fmt"
 	"math"
 	"os"
-	"strings"
 )
 
 func check(e error) {
@@ -70,8 +70,24 @@ func part1() {
 
 func part2() {
 	log.Println(log.NORMAL, "* Part 2 *")
-	log.Println(log.NORMAL, " Goal: ")
-	log.Println(log.NORMAL, " Answer: ")
+	log.Println(log.NORMAL, " Goal: Do the same thing but perform operations and stuff")
+	log.Println(log.NORMAL, " Answer: What do you get if you evaluate the expression represented by your hexadecimal-encoded BITS transmission?")
+
+	input, err := os.Open("./input.txt")
+	check(err)
+	defer input.Close()
+
+	bitReader := NewBitReader(input)
+	p, err := parsePacket(&bitReader, 0)
+	check(err)
+
+	scanner := bufio.NewScanner(bitReader.file)
+	if scanner.Scan() {
+		bytesLeft := len(scanner.Bytes())
+		log.Printf(log.NORMAL, color.Yellow+"\nCompleted reading from file with %d bytes remaining!\n"+color.Reset, bytesLeft)
+	}
+
+	log.Printf(log.NORMAL, "\nTotal of all versions is %d\n", p.value)
 }
 
 func parseInputFile() {
@@ -105,7 +121,6 @@ func parseInputFile() {
 type Packet struct {
 	id             int
 	value          int
-	subValues      int
 	version        int
 	subVersions    int
 	pType          int
@@ -114,11 +129,22 @@ type Packet struct {
 	subBitCount    int
 }
 
+const (
+	SUM         = 0
+	PRODUCT     = 1
+	MINIMUM     = 2
+	MAXIMUM     = 3
+	LITERAL     = 4
+	GREATERTHAN = 5
+	LESSTHAN    = 6
+	EQUALTO     = 7
+)
+
 var packetNum = 0
 
 func parsePacket(bitReader *BitReader, depth int) (Packet, error) {
 	packetNum++
-	p := Packet{packetNum, 0, 0, 0, 0, 0, 0, 0, 0}
+	p := Packet{packetNum, 0, 0, 0, 0, 0, 0, 0}
 	versionBits, err := bitReader.ReadBits(3)
 	p.bitCount += 3
 	if err != nil {
@@ -132,12 +158,12 @@ func parsePacket(bitReader *BitReader, depth int) (Packet, error) {
 	}
 	p.pType = bits.ToInt(typeBits)
 
-	log.Printf(log.DIAGNOSTIC, "\nP: %3d %s", packetNum, strings.Repeat(" ", depth*2))
-	log.Printf(log.DIAGNOSTIC, "Ver %d, Type %d", p.version, p.pType)
+	// log.Printf(log.DIAGNOSTIC, "\nP: %3d %s", packetNum, strings.Repeat(" ", depth*2))
+	// log.Printf(log.DIAGNOSTIC, "Ver %d, Type %d", p.version, p.pType)
 
 	switch p.pType {
-	case 4:
-		log.Printf(log.DIAGNOSTIC, ": L")
+	case LITERAL:
+		// log.Printf(log.DIAGNOSTIC, ": L")
 		var litBits []bool
 		var bitVals []bool
 		// read sets of 5 bits until the first bit of 5 is not a '1'
@@ -152,11 +178,12 @@ func parsePacket(bitReader *BitReader, depth int) (Packet, error) {
 		p.bitCount += 5
 		litBits = append(litBits, bitVals[1:]...)
 		p.value = bits.ToInt(litBits)
-		log.Printf(log.DIAGNOSTIC, " (value %d)", p.value)
+		log.Printf(log.DIAGNOSTIC, "%d", p.value)
 
 		return p, nil
-	default:
-		log.Printf(log.DIAGNOSTIC, ": O")
+	case SUM, PRODUCT, MINIMUM, MAXIMUM, GREATERTHAN, LESSTHAN, EQUALTO:
+		// log.Printf(log.DIAGNOSTIC, ": O")
+		log.Printf(log.DIAGNOSTIC, operString(p.pType))
 		hasSubpackets, err := bitReader.ReadBit()
 		p.bitCount += 1
 		if err != nil {
@@ -169,18 +196,28 @@ func parsePacket(bitReader *BitReader, depth int) (Packet, error) {
 				return p, fmt.Errorf("%s for subpacket count", err.Error())
 			}
 			p.subpacketCount = bits.ToInt(countBits)
-			log.Printf(log.DIAGNOSTIC, " (count: %d) {", p.subpacketCount)
+			// log.Printf(log.DIAGNOSTIC, " (count: %d) {", p.subpacketCount)
 
-			for subpacketTotal := 0; subpacketTotal < p.subpacketCount; {
+			for subpacketTotal, accum := 0, getAccum(p.pType); subpacketTotal < p.subpacketCount; {
 				sp, err := parsePacket(bitReader, depth+1)
-				log.Printf(log.DIAGNOSTIC, " [S: %d]", subpacketTotal+1)
+				// log.Printf(log.DIAGNOSTIC, " [S: %d]", subpacketTotal+1)
 				if err != nil {
 					return p, fmt.Errorf("%s for subpacket %d of id#%d", err.Error(), subpacketTotal+1, p.id)
 				}
+
+				if subpacketTotal == 0 && (p.pType == GREATERTHAN || p.pType == LESSTHAN || p.pType == EQUALTO) {
+					accum = sp.value
+				} else {
+					p.value = mungeValue(accum, p.pType, sp.value)
+				}
+
 				subpacketTotal++
-				p.subValues += sp.value + sp.subValues
 				p.subVersions += sp.version + sp.subVersions
 				p.subBitCount += sp.bitCount + sp.subBitCount
+
+				if subpacketTotal < p.subpacketCount {
+					log.Printf(log.DIAGNOSTIC, ", ")
+				}
 			}
 		} else {
 			lengthBits, err := bitReader.ReadBits(15)
@@ -189,29 +226,104 @@ func parsePacket(bitReader *BitReader, depth int) (Packet, error) {
 				return p, fmt.Errorf("%s for subpacket length", err.Error())
 			}
 			p.subBitCount = bits.ToInt(lengthBits)
-			log.Printf(log.DIAGNOSTIC, " (length: %d) {", p.subBitCount)
+			//log.Printf(log.DIAGNOSTIC, " (length: %d) {", p.subBitCount)
 			subpacketBits := 0
-			for subpacketBits < p.subBitCount {
+			for accum := getAccum(p.pType); subpacketBits < p.subBitCount; {
 				sp, err := parsePacket(bitReader, depth+1)
-				log.Printf(log.DIAGNOSTIC, " [S: %d]", p.subpacketCount+1)
+				//log.Printf(log.DIAGNOSTIC, " [S: %d]", p.subpacketCount+1)
 				if err != nil {
 					return p, fmt.Errorf("%s for subpacket of id#%d", err.Error(), p.id)
 				}
+
+				if subpacketBits == 0 && (p.pType == GREATERTHAN || p.pType == LESSTHAN || p.pType == EQUALTO) {
+					accum = sp.value
+				} else {
+					p.value = mungeValue(accum, p.pType, sp.value)
+				}
+
 				subpacketBits += sp.bitCount + sp.subBitCount
-				p.subValues += sp.value + sp.subValues
 				p.subVersions += sp.version + sp.subVersions
 				p.subpacketCount += 1 + sp.subpacketCount
+
+				if subpacketBits < p.subBitCount {
+					log.Printf(log.DIAGNOSTIC, ", ")
+				}
 			}
 			if subpacketBits != p.subBitCount {
 				return p, fmt.Errorf("packet #%d should parse %d bits but parsed %d", p.id, p.subBitCount, subpacketBits)
 			}
 		}
+		log.Printf(log.DIAGNOSTIC, ")")
 	}
 
-	if p.pType != 4 {
-		log.Printf(log.DIAGNOSTIC, "\n%s}", strings.Repeat(" ", 6+depth*2))
-	}
+	// if p.pType != 4 {
+	// 	log.Printf(log.DIAGNOSTIC, "\n%s}", strings.Repeat(" ", 6+depth*2))
+	// }
 	return p, nil
+}
+
+// get the starting accumulator for a given operation
+func getAccum(oper int) int {
+	switch oper {
+	case SUM:
+		return 0
+	case PRODUCT:
+		return 1
+	case MINIMUM:
+		return -math.MaxInt
+	case MAXIMUM:
+		return math.MinInt
+	case GREATERTHAN:
+		return 1
+	case LESSTHAN:
+		return 1
+	case EQUALTO:
+		return 1
+	default:
+		panic(fmt.Sprintf("Got invalid operation %d", oper))
+	}
+}
+
+// perform an operation on the given packet and return a new value
+func mungeValue(oldVal, oper, newVal int) int {
+	switch oper {
+	case SUM:
+		return oldVal + newVal
+	case PRODUCT:
+		return oldVal * newVal
+	case MINIMUM:
+		return numbers.Min(oldVal, newVal)
+	case MAXIMUM:
+		return numbers.Max(oldVal, newVal)
+	case GREATERTHAN:
+		return numbers.BoolToInt(oldVal > newVal)
+	case LESSTHAN:
+		return numbers.BoolToInt(oldVal < newVal)
+	case EQUALTO:
+		return numbers.BoolToInt(oldVal == newVal)
+	default:
+		panic(fmt.Sprintf("Got invalid operation %d", oper))
+	}
+}
+func operString(oper int) string {
+	switch oper {
+	case SUM:
+		return "SUM("
+	case PRODUCT:
+		return "PROD("
+	case MINIMUM:
+		return "MIN("
+	case MAXIMUM:
+		return "MAX("
+	case GREATERTHAN:
+		return "GT("
+	case LESSTHAN:
+		return "LT("
+	case EQUALTO:
+		return "EQ("
+	default:
+		panic(fmt.Sprintf("Got invalid operation %d", oper))
+	}
 }
 
 type BitReader struct {

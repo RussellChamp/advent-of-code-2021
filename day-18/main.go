@@ -7,6 +7,7 @@ import (
 	"AoC2021/utils/timer"
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 )
@@ -54,18 +55,16 @@ func part1() {
 
 	for scanner.Scan() {
 		line := scanner.Text()
+		log.Printf(log.DEBUG, "Line #%3d: ", lines+1)
 		if lines == 0 {
+			log.Printf(log.DEBUG, "%s\n", line)
 			s = ParseSnumStr(line)
 		} else {
+			log.Printf(log.DEBUG, "+ %s\n", line)
 			s = AddSnum(s, ParseSnumStr(line))
+			log.Printf(log.DEBUG, "%10s = %s\n", "", s.ToString())
 		}
-
-		// fmt.Printf("SNum #%d: %s\n", lines+1, s.ToString())
-
 		lines++
-		if lines > 1 {
-			break
-		}
 	}
 
 	log.Printf(log.NORMAL, "Read %d lines from input\n", lines)
@@ -79,50 +78,27 @@ func part2() {
 	log.Println(log.NORMAL, " Answer: ")
 }
 
-type Direction int
+// Snailfish number
+type Snum []int
 
 const (
-	LEFT  Direction = 0
-	RIGHT Direction = 1
-	UP    Direction = 2
+	LBracket int = -1
+	RBracket int = -2
+	Comma    int = -3
 )
-
-// Snailfish number
-// consists of a pair of numbers
-// the "left" and "right" side can consist of EITHER a normal value or another pair
-type Snum struct {
-	lVal      int
-	rVal      int
-	lPtr      *Snum
-	rPtr      *Snum
-	parentPtr *Snum
-	dir       Direction
-}
 
 func ParseSnumStr(line string) Snum {
 	var s Snum
-	var sPtr = &s
 	log.Printf(log.DIAGNOSTIC, "Starting to parse snum line \"%s\"\n", line)
 
-	// start on idx 1 and skip the initial open bracket
-	for idx := 1; idx < len(line); idx++ {
+	for idx := 0; idx < len(line); idx++ {
 		switch line[idx] {
 		case '[':
-			if sPtr.dir == LEFT {
-				// create a new snum on the left side
-				sPtr.lPtr = &Snum{parentPtr: sPtr}
-				sPtr.dir = RIGHT
-				sPtr = sPtr.lPtr
-			} else {
-				sPtr.rPtr = &Snum{parentPtr: sPtr}
-				sPtr = sPtr.rPtr
-			}
+			s = append(s, LBracket)
 		case ']':
-			// go up a level
-			sPtr.dir = LEFT
-			sPtr = sPtr.parentPtr
+			s = append(s, RBracket)
 		case ',':
-			continue
+			s = append(s, Comma)
 		default:
 			// if it's not a bracket or a comma then it must be a number
 			endIdx := idx + 1
@@ -132,15 +108,9 @@ func ParseSnumStr(line string) Snum {
 			strVal := line[idx:endIdx]
 			iVal, err := strconv.Atoi(strVal)
 			check(err)
+			s = append(s, iVal)
 
-			if sPtr.dir == LEFT {
-				sPtr.lVal = iVal
-				sPtr.dir = RIGHT
-			} else {
-				sPtr.rVal = iVal
-			}
 			idx = endIdx - 1
-
 		}
 	}
 
@@ -148,136 +118,150 @@ func ParseSnumStr(line string) Snum {
 }
 
 func (s Snum) ToString() string {
-	str := "["
-	if s.lPtr != nil {
-		str += s.lPtr.ToString()
-	} else {
-		str += fmt.Sprintf("%d", s.lVal)
+	str := ""
+
+	for _, i := range s {
+		switch i {
+		case LBracket:
+			str += "["
+		case RBracket:
+			str += "]"
+		case Comma:
+			str += ","
+		default: // must be a number
+			str += fmt.Sprintf("%d", i)
+		}
 	}
-	str += ","
-	if s.rPtr != nil {
-		str += s.rPtr.ToString()
-	} else {
-		str += fmt.Sprintf("%d", s.rVal)
-	}
-	str += "]"
 
 	return str
 }
 
 func AddSnum(s1, s2 Snum) Snum {
-	log.Printf(log.DEBUG, "  %s\n+ %s\n", s1.ToString(), s2.ToString())
-	s := Snum{lPtr: &s1, rPtr: &s2}
+	log.Printf(log.DIAGNOSTIC, "  %s\n+ %s\n", s1.ToString(), s2.ToString())
+
+	s := append(Snum{LBracket}, s1...)
+	s = append(s, Comma)
+	s = append(s, s2...)
+	s = append(s, RBracket)
+
 	s = s.Simplify()
-	log.Printf(log.DEBUG, "= %s\n", s.ToString())
+	log.Printf(log.DIAGNOSTIC, "= %s\n", s.ToString())
 
 	return s
 }
 
 func (s1 Snum) Add(s2 Snum) Snum {
-	log.Printf(log.DEBUG, "  %s\n+ %s\n", s1.ToString(), s2.ToString())
-	s := Snum{lPtr: &s1, rPtr: &s2}
+	log.Printf(log.DIAGNOSTIC, "  %s\n+ %s\n", s1.ToString(), s2.ToString())
+
+	s := append(Snum{LBracket}, s1...)
+	s = append(s, Comma)
+	s = append(s, s2...)
+	s = append(s, RBracket)
+
 	s = s.Simplify()
-	log.Printf(log.DEBUG, "= %s\n", s.ToString())
+	log.Printf(log.DIAGNOSTIC, "= %s\n", s.ToString())
 
 	return s
 }
 
 func (s Snum) Simplify() Snum {
-	madeAChange := true
-	for depth := 0; madeAChange; {
-		madeAChange = false
-		for sPtr := &s; sPtr != nil; {
-			switch {
-			case sPtr.ShouldExplode(depth):
-				ExplodeValue(sPtr)
-				madeAChange = true
-				sPtr = nil
+	depth := 0
 
-			// case sPtr.shouldSplit()
-
-			// travel the left side
-			case sPtr.dir == LEFT:
-				sPtr.dir = RIGHT
-				if sPtr.lPtr != nil {
-					sPtr = sPtr.lPtr
-					depth++
-				}
-			// travel the right side
-			case sPtr.dir == RIGHT:
-				sPtr.dir = UP
-				if sPtr.rPtr != nil {
-					sPtr = sPtr.rPtr
-					depth++
-				}
-			case sPtr.dir == UP:
-				sPtr = sPtr.parentPtr
-				depth--
+	for idx := 0; idx < len(s); idx++ {
+		switch s[idx] {
+		case LBracket:
+			depth++
+			if s.ShouldExplodeAt(idx) {
+				s.ExplodeAt(idx)
+				idx = 0
+			}
+		case RBracket:
+			depth--
+		case Comma:
+			continue
+		default: // a number
+			if s.ShouldSplitAt(idx) {
+				s.SplitAt(idx)
+				idx = 0
 			}
 		}
 	}
-
-	// check to explode
-	// check to split
 	return s
 }
 
-func (s Snum) IsNormal() bool {
-	return s.lPtr == nil && s.rPtr == nil
+func (s Snum) DepthAt(pos int) int {
+	depth := 0
+	for _, i := range s[:pos+1] {
+		if i == LBracket {
+			depth++
+		} else if i == RBracket {
+			depth--
+		}
+	}
+
+	return depth
 }
 
-func (s Snum) ShouldExplode(depth int) bool {
-	return s.IsNormal() && depth > 3
+func (s Snum) IsNormalAt(pos int) bool {
+	// the next few symbols should be "[#,#]"
+	return pos+4 < len(s) && s[pos] == LBracket && s[pos+1] >= 0 && s[pos+3] >= 0
 }
 
-func ExplodeValue(at *Snum) {
-	log.Printf(log.DIAGNOSTIC, "Exploding the snum at %s\n", at.ToString())
-	if !at.IsNormal() {
-		panic("tried to explode a non-normal snum")
-	}
-	lVal, rVal := at.lVal, at.rVal
-	var sPtr *Snum
-	// explode left
-	log.Printf(log.NEVER, "Starting at %s\n", at.parentPtr.ToString())
-	for sPtr = at.parentPtr; sPtr.parentPtr != nil && sPtr.lPtr != nil; sPtr = sPtr.parentPtr {
-		log.Printf(log.NEVER, " traveled left to %s\n", sPtr.ToString())
-	}
-	if sPtr != nil {
-		log.Printf(log.NEVER, " added left %d to %d\n", lVal, sPtr.lVal)
-		sPtr.lVal += lVal
-	}
-
-	// explode right
-	for sPtr = at.parentPtr; sPtr.parentPtr != nil && sPtr.rPtr != nil; {
-		log.Printf(log.NEVER, " traveled right to %s\n", sPtr.ToString())
-		sPtr = sPtr.parentPtr
-	}
-	if sPtr != nil {
-		log.Printf(log.NEVER, " added right %d to %d\n", rVal, sPtr.rVal)
-		sPtr.rVal += rVal
-	}
-
-	// delete yourself
-	pPtr := at.parentPtr
-	if pPtr.lPtr == at {
-		pPtr.lPtr = nil
-	} else if pPtr.rPtr == at {
-		pPtr.rPtr = nil
-	}
+// the current read position and depth (for ease of calculation)
+func (s Snum) ShouldExplodeAt(pos int) bool {
+	return s.IsNormalAt(pos) && s.DepthAt(pos) > 4
 }
 
-func (s Snum) ShouldSplit() bool {
-	return s.lVal > 9 || s.rVal > 9
+func (s *Snum) ExplodeAt(pos int) {
+	log.Printf(log.DIAGNOSTIC, "Exploding the snum at %d: %s\n", pos, s.ToString())
+
+	lVal, rVal := (*s)[pos+1], (*s)[pos+3]
+	// explode left!
+	for idx := pos; idx > 0; idx-- {
+		if (*s)[idx] >= 0 {
+			(*s)[idx] += lVal
+			break
+		}
+	}
+	// explode right!
+	for idx := pos + 4; idx < len(*s); idx++ {
+		if (*s)[idx] >= 0 {
+			(*s)[idx] += rVal
+			break
+		}
+	}
+	// replace the current snum with 0!
+	*s = append((*s)[0:pos], append(Snum{0}, (*s)[pos+5:]...)...)
+}
+
+func (s Snum) ShouldSplitAt(pos int) bool {
+	return s[pos] > 9
+}
+
+func (s *Snum) SplitAt(pos int) {
+	lVal, rVal := int(math.Floor(float64((*s)[pos])/2)), int(math.Ceil(float64((*s)[pos])/2))
+	log.Printf(log.DIAGNOSTIC, "Splitting the snum at %d: %d, adding values %d and %d\n", pos, (*s)[pos], lVal, rVal)
+
+	// Add a few extra values into the slice and then set the values
+	*s = append((*s)[:pos+4], (*s)[pos:]...)
+	(*s)[pos] = LBracket
+	(*s)[pos+1] = lVal
+	(*s)[pos+2] = Comma
+	(*s)[pos+3] = rVal
+	(*s)[pos+4] = RBracket
 }
 
 func (s Snum) CalcMagnitude() int {
-	lVal, rVal := s.lVal, s.rVal
-	if s.lPtr != nil {
-		lVal = s.lPtr.CalcMagnitude()
+	for idx := 0; idx < len(s) && len(s) > 1; idx++ {
+		if s.IsNormalAt(idx) {
+			mVal := 3*s[idx+1] + 2*s[idx+3]
+			log.Printf(log.DIAGNOSTIC, "Replacing %s with %d: ", s[idx:idx+5].ToString(), mVal)
+			s = append(s[:idx+1], s[idx+5:]...)
+			s[idx] = mVal
+			idx = 0
+			log.Printf(log.DIAGNOSTIC, "%s\n", s.ToString())
+		}
 	}
-	if s.rPtr != nil {
-		rVal = s.rPtr.CalcMagnitude()
-	}
-
-	return 3*lVal + 2*rVal
+	// when there's only one value left, that's the answer
+	return 3*s[1] + 2*s[3]
 }

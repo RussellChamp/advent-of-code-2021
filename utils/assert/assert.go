@@ -9,6 +9,13 @@ func IsTrue(t *testing.T, expr bool, message string) {
 	}
 }
 
+func IsFalse(t *testing.T, expr bool, message string) {
+	if expr == true {
+		t.Logf("Expected false but got true: %s", message)
+		t.Fail()
+	}
+}
+
 func EqualsStr(t *testing.T, actual, expected, message string) {
 	if actual != expected {
 		t.Logf("Expected value '%s' but got '%s': %s", expected, actual, message)
